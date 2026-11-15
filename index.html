@@ -661,7 +661,7 @@ function nearestEnemy(x,y,maxD,ex){
 function bossPoint(){const a=Math.random()*TAU,d=Math.min(VW,VH)*0.5+70;return{x:P.x+Math.cos(a)*d,y:P.y+Math.sin(a)*d};}
 function spawnPoint(){const a=Math.random()*TAU,d=Math.hypot(VW,VH)/2+60;return{x:P.x+Math.cos(a)*d,y:P.y+Math.sin(a)*d};}
 /* Each enemy type ramps in, peaks, then (for the weak ones) retires as rounds go on. */
-const ROSTER=[['grunt',1,1,9,10],['swift',2,4,14,6],['splitter',3,5,15,4],['spitter',4,6,17,3.5],['brute',6,9,99,4],['charger',7,9,99,3.5],['shade',9,11,99,4],['bulwark',11,13,99,3.5],['mortar',13,15,99,3]];
+const ROSTER=[['grunt',1,1,9,10],['swift',2,4,14,6],['splitter',3,5,15,4],['spitter',4,6,17,3.5],['brute',6,9,99,4],['charger',7,9,99,3.5],['shade',9,11,99,4],['bulwark',11,13,99,3.5],['mortar',13,15,99,1.2]];
 function rosterFor(R){
   const o=[];
   for(const [name,from,peak,to,max] of ROSTER){
@@ -673,6 +673,7 @@ function rosterFor(R){
   if(!o.length)o.push(['brute',1]);
   return o;
 }
+function cappedType(){const t=pickType();return t==='mortar'&&G.enemies.filter(o=>o.type==='mortar'&&!o.dead).length>=5?'brute':t;}
 function pickType(){
   const o=rosterFor(RND());
   let tot=0;for(const x of o)tot+=x[1];let r=Math.random()*tot;
@@ -704,7 +705,7 @@ function startRound(){
 }
 function ambush(n){
   const d=Math.hypot(VW,VH)/2+10,off=Math.random()*TAU;
-  for(let i=0;i<n&&G.rLeft>0;i++){const a=off+i/n*TAU;spawnEnemy(pickType(),P.x+Math.cos(a)*d,P.y+Math.sin(a)*d);G.rLeft--;}
+  for(let i=0;i<n&&G.rLeft>0;i++){const a=off+i/n*TAU;spawnEnemy(cappedType(),P.x+Math.cos(a)*d,P.y+Math.sin(a)*d);G.rLeft--;}
   banner('AMBUSH','#ff4f7b',1.2,true);
 }
 function endRound(){
@@ -720,7 +721,8 @@ function updateRound(dt){
   const R=G.round,cap=Math.min(400,160+R*18);
   G.rAcc=Math.min(G.rAcc+G.rRate*dt,4);
   while(G.rAcc>=1&&G.rLeft>0&&G.enemies.length<cap){G.rAcc-=1;G.rLeft--;const p=spawnPoint();
-    const e=spawnEnemy(G.rKind==='swarm'?'swift':pickType(),p.x,p.y);if(G.rKind==='swarm'){e.hp*=1.5;e.maxHp=e.hp;e.spd*=1.15;}}
+    const ty=G.rKind==='swarm'?'swift':cappedType();
+    const e=spawnEnemy(ty,p.x,p.y);if(G.rKind==='swarm'){e.hp*=1.5;e.maxHp=e.hp;e.spd*=1.15;}}
   if(G.gildAt&&G.t>=G.gildAt){G.gildAt=0;spawnGilded();}
   const alive=aliveFoes();
   G.straggle=G.rLeft<=0&&!G.boss&&alive>0&&alive<=6;
@@ -742,7 +744,7 @@ function spawnGilded(){
   const e=spawnEnemy('gilded',P.x+Math.cos(a)*d,P.y+Math.sin(a)*d,false);
   e.life=14;banner('A GILDED WISP APPEARS','#ffd84a',1.6,true);sfx('gild');
 }
-function addZone(x,y,r,T,dmg,col){if(G.zones.length<40)G.zones.push({x,y,r,t:0,T,dmg,col});}
+function addZone(x,y,r,T,dmg,col,m){if(G.zones.length<40)G.zones.push({x,y,r,t:0,T,dmg,col,m:!!m});}
 function updateZones(dt){
   for(const z of G.zones){z.t+=dt;
     if(z.t>=z.T&&!z.done){z.done=true;G.fx.push({k:'ring',x:z.x,y:z.y,r0:z.r*0.4,r1:z.r*1.15,t:0,dur:0.3,col:z.col});burst(z.x,z.y,z.col,18,260);G.shake=Math.max(G.shake,5);sfx('boom');
@@ -1007,7 +1009,8 @@ function update(dt){
       if(e.tm<=0&&d>160){e.tm=rand(2.4,3.4);burst(e.x,e.y,e.col,10,140);const j=Math.min(150,d-70);e.x+=nx*j;e.y+=ny*j;burst(e.x,e.y,e.col,10,140);sfx('blink');}
     }else if(e.type==='mortar'){
       if(d<280){mx=-nx;my=-ny;}else if(d<380){mx=-ny*0.6;my=nx*0.6;}
-      if(e.tm<=0&&d<640){e.tm=3.2;addZone(P.x+P.vx*0.45,P.y+P.vy*0.45,62,1.15,e.dmg*dmgMulR(),'#ffb36b');sfx('spit');}
+      if(e.tm<=0){const onScreen=Math.abs(e.x-P.x)<VW/2&&Math.abs(e.y-P.y)<VH/2;
+        if(onScreen&&G.zones.filter(z=>z.m).length<4){e.tm=rand(5,6.5);addZone(P.x+P.vx*0.2,P.y+P.vy*0.2,55,1.6,14*Math.sqrt(dmgMulR()),'#ffb36b',true);sfx('spit');}else e.tm=0.5;}
     }else if(e.type==='gilded'){
       const wob=Math.sin(G.t*3+e.id)*0.6;mx=-nx-ny*wob;my=-ny+nx*wob;const ml=Math.hypot(mx,my)||1;mx/=ml;my/=ml;
       e.life-=dt;if(e.life<=0){e.dead=true;burst(e.x,e.y,'#ffd84a',20,200);banner('THE GILDED WISP ESCAPED','#a69ed0',1.2,true);continue;}
