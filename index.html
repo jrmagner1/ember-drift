@@ -80,6 +80,7 @@ kbd{font:600 11px/1 var(--ui);padding:4px 6px;border-radius:5px;background:rgba(
 .controls span{display:inline-flex;gap:6px;align-items:center}
 .hint{margin:0;font-size:15px;color:var(--muted);line-height:1.45}
 .hint b{color:var(--ember);font-weight:600}
+.build-tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#6f7b92;order:99}
 
 .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .card{--c:var(--ember);text-align:left;font-family:var(--ui);color:var(--text);background:linear-gradient(180deg,#1f1940,#130f28);
@@ -237,7 +238,7 @@ kbd{background:rgba(0,229,255,.12);color:#bff8ff;border:1px solid rgba(0,229,255
   <div class="panel title-panel">
     <p class="eyebrow">Neon foundry · survive the machine tide</p>
     <h1 class="logo">Ember<br>Drift</h1>
-    <p class="lede">You are the last ember in the void. The Hollow swarm thickens every second. Gather light, build an arsenal, awaken your weapons, and see how long you can burn.</p>
+    <p class="lede">You fly the last ember-class fighter over a neon foundry city. Its machines come in waves, and every round they come back harder. Bolt new weapons onto your ship, awaken them, and see how long you can burn.</p>
     <div class="row">
       <button id="playBtn" class="btn primary">Play <kbd>Enter</kbd></button>
       <button id="forgeBtn" class="btn">Forge <span class="ember-count" id="menuEmbers">0</span></button>
@@ -264,6 +265,7 @@ kbd{background:rgba(0,229,255,.12);color:#bff8ff;border:1px solid rgba(0,229,255
       <span><kbd>N</kbd> music</span>
     </div>
     <p class="hint portrait-tip"><b>Tip:</b> turn your phone sideways. Your left thumb steers, and tapping the right side dashes.</p>
+    <p class="hint build-tag" id="buildTag">Build 12 · steam-tech</p>
     <p class="hint">Survive round after round. Weapons fire on their own. Max a weapon while holding its paired passive to <b>awaken</b> it (see Awakenings). Keep the kill combo alive for score multipliers.</p>
   </div>
 </section>
